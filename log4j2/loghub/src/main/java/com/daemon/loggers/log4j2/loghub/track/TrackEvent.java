@@ -1,10 +1,11 @@
 package com.daemon.loggers.log4j2.loghub.track;
 
 import com.alibaba.fastjson.JSONObject;
+import com.daemon.loggers.Event;
 
 import java.util.Map;
 
-public class TrackEvent implements Event{
+public class TrackEvent implements Event {
     private String name;
     private String client;
     private String platform;

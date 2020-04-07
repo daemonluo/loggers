@@ -10,6 +10,7 @@
     <version>1.0</version>
     <modules>
         <module>log4j2</module>
+        <module>common</module>
     </modules>
 
     <properties>
@@ -48,6 +49,16 @@
             </plugin>
         </plugins>
     </build>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.daemon.loggers</groupId>
+                <artifactId>common</artifactId>
+                <version>1.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>

@@ -1,4 +1,4 @@
-package com.daemon.loggers.log4j2.loghub.track;
+package com.daemon.loggers;
 
 import java.io.Serializable;
 import java.util.Map;

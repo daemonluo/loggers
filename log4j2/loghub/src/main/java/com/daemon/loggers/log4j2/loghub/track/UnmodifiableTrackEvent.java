@@ -1,6 +1,7 @@
 package com.daemon.loggers.log4j2.loghub.track;
 
 import com.alibaba.fastjson.JSONObject;
+import com.daemon.loggers.Event;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.*;
