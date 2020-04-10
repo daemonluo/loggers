@@ -2,15 +2,16 @@ package com.daemon.loggers.log4j2.loghub;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.aliyun.openservices.aliyun.log.producer.LogProducer;
+import com.aliyun.openservices.aliyun.log.producer.ProducerConfig;
+import com.aliyun.openservices.aliyun.log.producer.ProjectConfig;
+import com.aliyun.openservices.aliyun.log.producer.errors.ProducerException;
 import com.aliyun.openservices.log.common.LogContent;
 import com.aliyun.openservices.log.common.LogItem;
-import com.aliyun.openservices.log.producer.LogProducer;
-import com.aliyun.openservices.log.producer.ProducerConfig;
-import com.aliyun.openservices.log.producer.ProjectConfig;
 import com.aliyun.openservices.log.util.NetworkUtils;
 import com.daemon.loggers.Event;
 import com.daemon.loggers.Events;
-import com.daemon.loggers.log4j2.loghub.track.TrackLayout;
+import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
@@ -19,7 +20,6 @@ import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.Node;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
-import org.apache.logging.log4j.core.util.Assert;
 import org.apache.logging.log4j.core.util.Throwables;
 import org.apache.logging.log4j.util.Strings;
 
@@ -36,6 +36,8 @@ import java.util.stream.Collectors;
 @Plugin(name = "Loghub", category = Node.CATEGORY, elementType = Appender.ELEMENT_TYPE, printObject = true)
 final public class LoghubAppender extends AbstractAppender {
     public static final String UUID_KEY = "_uuid_";
+
+    public static final String LOCAL_IP = NetworkUtils.getLocalMachineIP();
 
     private final ProjectConfig projectConfig;
     private final ProducerConfig producerConfig;
@@ -98,6 +100,8 @@ final public class LoghubAppender extends AbstractAppender {
 
     private final Map<String, String> predefined;
 
+    private final boolean debug;
+
     private LogProducer producer;
 
     LoghubAppender(
@@ -116,10 +120,11 @@ final public class LoghubAppender extends AbstractAppender {
         ZoneId timezone,
         LinkedHashMap<String, String> predefined,
         Map<String, String> includes,
-        Set<String> excludes
+        Set<String> excludes,
+        boolean debug
     ) {
         super(name, filter, layout, ignoreExceptions);
-        this.project = projectConfig.projectName;
+        this.project = projectConfig.getProject();
         this.logstore = logstore;
         this.topic = topic;
         this.module = module;
@@ -132,48 +137,40 @@ final public class LoghubAppender extends AbstractAppender {
         this.predefined = Collections.unmodifiableMap(predefined);
         this.includes = Collections.unmodifiableMap(includes);
         this.excludes = Collections.unmodifiableSet(excludes);
+        this.debug = debug;
     }
 
     @Override
     public void start() {
         super.start();
         producer = new LogProducer(producerConfig);
-        producer.setProjectConfig(projectConfig);
+        producer.putProjectConfig(projectConfig);
     }
 
     @Override
     protected boolean stop(Future<?> future) {
         boolean result = super.stop(future);
-        if (producer != null) {
-            producer.flush();
-            producer.close();
-        }
+        stopProducer();
         return result;
     }
 
     @Override
     protected boolean stop(long timeout, TimeUnit timeUnit, boolean changeLifeCycleState) {
         boolean result = super.stop(timeout, timeUnit, changeLifeCycleState);
-        if (producer != null) {
-            producer.flush();
-            producer.close();
-        }
+        stopProducer();
         return result;
     }
 
     @Override
     public void stop() {
         super.stop();
-        if (producer != null) {
-            producer.flush();
-            producer.close();
-        }
+        stopProducer();
     }
 
     @Override
     public void append(LogEvent event) {
         List<LogItem> logItems = new ArrayList<>();
-        Layout layout = getLayout();
+        Layout<? extends Serializable> layout = getLayout();
         if (layout == null) {
             logItems.addAll(appendCommonEvent(event, null));
         } else {
@@ -182,6 +179,9 @@ final public class LoghubAppender extends AbstractAppender {
             } else {
                 logItems.addAll(appendCommonEvent(event, layout));
             }
+        }
+        if (logItems.isEmpty()) {
+            return;
         }
         String topic = this.topic;
         String source = this.source;
@@ -199,12 +199,9 @@ final public class LoghubAppender extends AbstractAppender {
                 event.setIncludeLocation(false);
             }
 
-            String throwable = getThrowableStr(event.getThrown());
-            if (throwable != null) {
-                item.PushBack("throwable", throwable);
-            }
+            Optional.ofNullable(event.getThrown()).map(this::getThrowableStr).ifPresent(throwable -> item.PushBack("throwable", throwable));
 
-            item.PushBack("location", location == null ? "Unknown(Unknown Location)" : location.toString());
+            item.PushBack("location", Optional.ofNullable(location).map(Object::toString).orElse("Unknown(Unknown Location)"));
 
             Map<String, String> contextData = event.getContextData().toMap();
             for (Map.Entry<String, String> entry : predefined.entrySet()) {
@@ -257,43 +254,27 @@ final public class LoghubAppender extends AbstractAppender {
                     item.PushBack("properties", json.toJSONString());
                 }
             }
-            item.PushBack("_module_", Assert.isEmpty(module) ? event.getLoggerName() : module);
+            item.PushBack("_module_", StringUtils.isEmpty(module) ? event.getLoggerName() : module);
             if (!containsUUID(item)) {
                 item.PushBack(UUID_KEY, UUID.randomUUID().toString());
             }
         }
-        topic = Assert.isEmpty(topic) ? "" : topic;
-        source = Assert.isEmpty(source) ? "" : source;
-        producer.send(project, logstore, topic, source, logItems, new LoghubAppenderCallback(LOGGER, project, logstore, topic, source, logItems));
-    }
-
-    private String getThrowableStr(Throwable throwable) {
-        if (throwable == null) {
-            return null;
-        }
-        StringBuilder sb = new StringBuilder();
-        boolean isFirst = true;
-        for (String s : Throwables.toStringList(throwable)) {
-            if (isFirst) {
-                isFirst = false;
-            } else {
-                sb.append(System.getProperty("line.separator"));
-            }
-            sb.append(s);
-        }
-        return sb.toString();
-    }
-
-    private boolean containsUUID(LogItem item) {
-        for (LogContent content : item.GetLogContents()) {
-            if (content.GetKey().equalsIgnoreCase(UUID_KEY)) {
-                return Strings.isNotEmpty(content.GetValue());
+        topic = StringUtils.isEmpty(topic) ? "" : topic;
+        source = StringUtils.isEmpty(source) ? "" : source;
+        if (debug) {
+            for (LogItem logItem : logItems) {
+                System.out.println(logItem.ToJsonString());
             }
         }
-        return false;
+        try {
+            producer.send(project, logstore, topic, source, logItems, new LoghubAppenderCallback(LOGGER, project, logstore, topic, source, logItems));
+        } catch (InterruptedException | ProducerException e) {
+            String msg = String.format("Failed to send log, project=%s, logstore=%s, topic=%s, source=%s, logItems=%s: {}", project, logstore, topic, source, logItems.toString());
+            LOGGER.error(msg, getThrowableStr(e));
+        }
     }
 
-    private List<LogItem> appendCommonEvent(LogEvent event, Layout layout) {
+    private List<LogItem> appendCommonEvent(LogEvent event, Layout<? extends Serializable> layout) {
         LogItem item = new LogItem();
         item.SetTime((int) (event.getTimeMillis() / 1000));
         ZonedDateTime dateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(event.getTimeMillis()), timezone);
@@ -314,6 +295,9 @@ final public class LoghubAppender extends AbstractAppender {
         Events events = layout.toSerializable(event);
         List<String> tags = events.getTags();
         String jsonTags = tags == null || tags.size() == 0 ? null : new JSONArray().fluentAddAll(tags).toJSONString();
+        if (Objects.isNull(events.getTags())) {
+            return Collections.emptyList();
+        }
         if (events.isEmpty()) {
             final LogItem item = new LogItem();
             item.SetTime((int) (event.getTimeMillis() / 1000));
@@ -321,6 +305,9 @@ final public class LoghubAppender extends AbstractAppender {
             if (jsonTags != null) {
                 item.PushBack("_tags_", jsonTags);
             }
+            ZonedDateTime dateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(event.getTimeMillis()), timezone);
+            item.PushBack("_time_", dateTime.format(formatter));
+            item.PushBack("client", LOCAL_IP);
             items.add(item);
         } else {
             for (Event e : events.getEvents()) {
@@ -368,7 +355,7 @@ final public class LoghubAppender extends AbstractAppender {
                 if (jsonTags != null) {
                     item.PushBack("_tags_", jsonTags);
                 }
-                if (layout.isReserveRaw() || (tags != null && tags.size() > 0)) {
+                if (layout.isReserveRaw()) {
                     item.PushBack("message", event.getMessage().getFormattedMessage());
                 }
                 if (layout.isReserveFormat()) {
@@ -380,6 +367,47 @@ final public class LoghubAppender extends AbstractAppender {
         return items;
     }
 
+    private String getThrowableStr(Throwable throwable) {
+        if (throwable == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        boolean isFirst = true;
+        for (String s : Throwables.toStringList(throwable)) {
+            if (isFirst) {
+                isFirst = false;
+            } else {
+                sb.append(System.getProperty("line.separator"));
+            }
+            sb.append(s);
+        }
+        return sb.toString();
+    }
+
+    private boolean containsUUID(LogItem item) {
+        for (LogContent content : item.GetLogContents()) {
+            if (content.GetKey().equalsIgnoreCase(UUID_KEY)) {
+                return Strings.isNotEmpty(content.GetValue());
+            }
+        }
+        return false;
+    }
+
+    private void stopProducer() {
+        if (debug) {
+            System.out.println("close loghub producer");
+        }
+        if (Objects.isNull(producer)) {
+            return;
+        }
+        try {
+            producer.close();
+        } catch (InterruptedException | ProducerException e) {
+            LOGGER.error("producer close error: {}", getThrowableStr(e));
+        }
+    }
+
+    @SuppressWarnings("unused")
     @PluginBuilderFactory
     public static <B extends LoghubAppenderBuilder<B>> B newBuilder() {
         return new LoghubAppenderBuilder<B>().asBuilder();

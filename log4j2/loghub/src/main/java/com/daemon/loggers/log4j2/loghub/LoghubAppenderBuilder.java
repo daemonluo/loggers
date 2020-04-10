@@ -1,7 +1,7 @@
 package com.daemon.loggers.log4j2.loghub;
 
-import com.aliyun.openservices.log.producer.ProducerConfig;
-import com.aliyun.openservices.log.producer.ProjectConfig;
+import com.aliyun.openservices.aliyun.log.producer.ProducerConfig;
+import com.aliyun.openservices.aliyun.log.producer.ProjectConfig;
 import com.daemon.loggers.log4j2.loghub.element.Columns;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
@@ -17,6 +17,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@SuppressWarnings("unused")
 public class LoghubAppenderBuilder<B extends LoghubAppenderBuilder<B>> extends AbstractAppender.Builder<B> implements Builder<LoghubAppender> {
     @PluginBuilderAttribute
     @Required
@@ -41,6 +42,9 @@ public class LoghubAppenderBuilder<B extends LoghubAppenderBuilder<B>> extends A
     @PluginBuilderAttribute
     private String stsToken;
 
+    @PluginBuilderAttribute
+    private String userAgent = "log4j2-loghub-appender";
+
     @PluginBuilderAttribute("topic")
     private String topic;
 
@@ -54,22 +58,22 @@ public class LoghubAppenderBuilder<B extends LoghubAppenderBuilder<B>> extends A
     private String host;
 
     @PluginBuilderAttribute("timeout")
-    private int packageTimeoutInMS;
-
-    @PluginBuilderAttribute("size")
-    private int logsCountPerPackage;
+    private int timeout;
 
     @PluginBuilderAttribute("count")
-    private int logsBytesPerPackage;
+    private int count;
+
+    @PluginBuilderAttribute("bytes")
+    private int bytes;
 
     @PluginBuilderAttribute("memory")
-    private int memPoolSizeInByte;
+    private int memory;
 
-    @PluginBuilderAttribute("retry")
-    private int retryTimes;
+    @PluginBuilderAttribute("retries")
+    private int retries;
 
     @PluginBuilderAttribute("threads")
-    private int maxIOThreadSizeInPool;
+    private int threads;
 
     @PluginBuilderAttribute("formatter")
     private String formatter = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
@@ -82,6 +86,9 @@ public class LoghubAppenderBuilder<B extends LoghubAppenderBuilder<B>> extends A
 
     @PluginElement("columns")
     private Columns columns;
+
+    @PluginBuilderAttribute("debug")
+    private Boolean debug = Boolean.FALSE;
 
     public String getProject() {
         return project;
@@ -137,6 +144,15 @@ public class LoghubAppenderBuilder<B extends LoghubAppenderBuilder<B>> extends A
         return asBuilder();
     }
 
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public B setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
+        return asBuilder();
+    }
+
     public String getTopic() {
         return topic;
     }
@@ -173,57 +189,57 @@ public class LoghubAppenderBuilder<B extends LoghubAppenderBuilder<B>> extends A
         return asBuilder();
     }
 
-    public int getPackageTimeoutInMS() {
-        return packageTimeoutInMS;
+    public int getTimeout() {
+        return timeout;
     }
 
-    public B setPackageTimeoutInMS(int packageTimeoutInMS) {
-        this.packageTimeoutInMS = packageTimeoutInMS;
+    public B setTimeout(int timeout) {
+        this.timeout = timeout;
         return asBuilder();
     }
 
-    public int getLogsCountPerPackage() {
-        return logsCountPerPackage;
+    public int getCount() {
+        return count;
     }
 
-    public B setLogsCountPerPackage(int logsCountPerPackage) {
-        this.logsCountPerPackage = logsCountPerPackage;
+    public B setCount(int count) {
+        this.count = count;
         return asBuilder();
     }
 
-    public int getLogsBytesPerPackage() {
-        return logsBytesPerPackage;
+    public int getBytes() {
+        return bytes;
     }
 
-    public B setLogsBytesPerPackage(int logsBytesPerPackage) {
-        this.logsBytesPerPackage = logsBytesPerPackage;
+    public B setBytes(int bytes) {
+        this.bytes = bytes;
         return asBuilder();
     }
 
-    public int getMemPoolSizeInByte() {
-        return memPoolSizeInByte;
+    public int getMemory() {
+        return memory;
     }
 
-    public B setMemPoolSizeInByte(int memPoolSizeInByte) {
-        this.memPoolSizeInByte = memPoolSizeInByte;
+    public B setMemory(int memory) {
+        this.memory = memory;
         return asBuilder();
     }
 
-    public int getRetryTimes() {
-        return retryTimes;
+    public int getRetries() {
+        return retries;
     }
 
-    public B setRetryTimes(int retryTimes) {
-        this.retryTimes = retryTimes;
+    public B setRetries(int retries) {
+        this.retries = retries;
         return asBuilder();
     }
 
-    public int getMaxIOThreadSizeInPool() {
-        return maxIOThreadSizeInPool;
+    public int getThreads() {
+        return threads;
     }
 
-    public B setMaxIOThreadSizeInPool(int maxIOThreadSizeInPool) {
-        this.maxIOThreadSizeInPool = maxIOThreadSizeInPool;
+    public B setThreads(int threads) {
+        this.threads = threads;
         return asBuilder();
     }
 
@@ -263,37 +279,47 @@ public class LoghubAppenderBuilder<B extends LoghubAppenderBuilder<B>> extends A
         return asBuilder();
     }
 
+    public Boolean getDebug() {
+        return debug;
+    }
+
+    public B setDebug(Boolean debug) {
+        this.debug = debug;
+        return asBuilder();
+    }
+
+    private ProjectConfig buildProjectConfig() {
+        return new ProjectConfig(project, endpoint, accessId, accessKey, stsToken, userAgent);
+    }
+
+    private ProducerConfig buildProducerConfig() {
+        ProducerConfig config = new ProducerConfig();
+        if (timeout > 0) {
+            config.setMaxBlockMs(timeout);
+        }
+        if (count > 0) {
+            config.setBatchCountThreshold(count);
+        }
+        if (bytes > 0) {
+            config.setBatchSizeThresholdInBytes(bytes);
+        }
+        if (memory > 0) {
+            config.setTotalSizeInBytes(memory);
+        }
+        if (retries > 0) {
+            config.setRetries(retries);
+        }
+        if (threads > 0) {
+            config.setIoThreadCount(threads);
+        }
+        return config;
+    }
+
     @Override
     public LoghubAppender build() {
-        ProjectConfig projectConfig = new ProjectConfig();
-        projectConfig.projectName = getProject();
-        projectConfig.accessKeyId = getAccessId();
-        projectConfig.accessKey = getAccessKey();
-        projectConfig.endpoint = getEndpoint();
-        if (getStsToken() != null) {
-            projectConfig.stsToken = getStsToken();
-        }
+        ProjectConfig projectConfig = buildProjectConfig();
 
-        ProducerConfig producerConfig = new ProducerConfig();
-        if (getPackageTimeoutInMS() > 0) {
-            producerConfig.packageTimeoutInMS = getPackageTimeoutInMS();
-        }
-        if (getLogsCountPerPackage() > 0) {
-            producerConfig.logsCountPerPackage = getLogsCountPerPackage();
-        }
-        if (getLogsBytesPerPackage() > 0) {
-            producerConfig.logsBytesPerPackage = getLogsBytesPerPackage();
-        }
-        if (getMemPoolSizeInByte() > 0) {
-            producerConfig.memPoolSizeInByte = getMemPoolSizeInByte();
-        }
-        if (getRetryTimes() > 0) {
-            producerConfig.retryTimes = getRetryTimes();
-        }
-        if (getMaxIOThreadSizeInPool() > 0) {
-            producerConfig.maxIOThreadSizeInPool = getMaxIOThreadSizeInPool();
-        }
-        producerConfig.userAgent = "log4j2";
+        ProducerConfig producerConfig = buildProducerConfig();
         LinkedHashMap<String, String> predefined = new LinkedHashMap<>();
         for (KeyValuePair pair : getFields()) {
             predefined.put(pair.getKey(), pair.getValue());
@@ -323,7 +349,8 @@ public class LoghubAppenderBuilder<B extends LoghubAppenderBuilder<B>> extends A
             ZoneId.of(timezone),
             predefined,
             includes,
-            excludes
+            excludes,
+            getDebug()
         );
     }
 }

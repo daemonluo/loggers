@@ -1,4 +1,4 @@
-package com.daemon.loggers.log4j2.loghub.track;
+package com.daemon.loggers.log4j2.loghub;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.daemon.loggers.Event;
 import com.daemon.loggers.Events;
+import com.daemon.loggers.loghub.UnmodifiableTrackEvent;
 import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.config.Configuration;
@@ -156,7 +157,7 @@ public class TrackLayout extends AbstractLayout<Events> {
                 continue;
             }
             if (object instanceof List) {
-                events.addAll(copyFromList((List) object, hasError, true, times + 1));
+                events.addAll(copyFromList((List<Object>) object, hasError, true, times + 1));
                 continue;
             }
             if (object instanceof String && !skipString) {
@@ -203,6 +204,7 @@ public class TrackLayout extends AbstractLayout<Events> {
         return reserveRaw;
     }
 
+    @SuppressWarnings("unused")
     @PluginBuilderFactory
     public static <B extends TrackLayoutBuilder<B>> B newBuilder() {
         return new TrackLayoutBuilder<B>().asBuilder();

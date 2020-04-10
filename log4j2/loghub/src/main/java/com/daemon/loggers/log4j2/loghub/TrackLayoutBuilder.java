@@ -1,6 +1,5 @@
-package com.daemon.loggers.log4j2.loghub.track;
+package com.daemon.loggers.log4j2.loghub;
 
-import com.daemon.loggers.log4j2.loghub.LoghubAppender;
 import com.daemon.loggers.log4j2.loghub.element.Columns;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;

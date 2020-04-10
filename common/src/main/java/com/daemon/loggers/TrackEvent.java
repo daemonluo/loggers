@@ -3,7 +3,7 @@ package com.daemon.loggers;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class SimpleEvent implements Event {
+public class TrackEvent implements Event {
     private final String name;
 
     private String client;
@@ -14,7 +14,7 @@ public class SimpleEvent implements Event {
 
     private long time;
 
-    public SimpleEvent(String name) {
+    public TrackEvent(String name) {
         this.name = name;
     }
 
@@ -28,7 +28,7 @@ public class SimpleEvent implements Event {
         return client;
     }
 
-    public SimpleEvent client(String client) {
+    public TrackEvent client(String client) {
         this.client = client;
         return this;
     }
@@ -38,7 +38,7 @@ public class SimpleEvent implements Event {
         return platform;
     }
 
-    public SimpleEvent platform(String platform) {
+    public TrackEvent platform(String platform) {
         this.platform = platform;
         return this;
     }
@@ -48,12 +48,12 @@ public class SimpleEvent implements Event {
         return properties;
     }
 
-    public SimpleEvent properties(Map<String, String> properties) {
+    public TrackEvent properties(Map<String, String> properties) {
         this.properties = properties;
         return this;
     }
 
-    public SimpleEvent property(String key, String value) {
+    public TrackEvent property(String key, String value) {
         this.properties.put(key, value);
         return this;
     }
@@ -63,7 +63,7 @@ public class SimpleEvent implements Event {
         return time;
     }
 
-    public SimpleEvent time(long time) {
+    public TrackEvent time(long time) {
         this.time = time;
         return this;
     }

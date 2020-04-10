@@ -7,7 +7,6 @@ import com.aliyun.openservices.log.common.LogItem;
 import java.util.List;
 
 public class LoghubAppenderCallback implements Callback {
-
     protected LoghubAppender loghubAppender;
 
     protected String project;

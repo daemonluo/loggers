@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" xmlns:xi="http://www.w3.org/2001/XInclude" packages="com.daemon.loggers.log4j2.loghub">
+    <xi:include href="loghub-properties.xml" />
+    <Appenders>
+        <Loghub name="loghub-appender-without-layout">
+            <endpoint>${endpoint}</endpoint>
+            <project>${project}</project>
+            <logstore>${logstore}</logstore>
+            <accessId>${access_id}</accessId>
+            <accessKey>${access_key}</accessKey>
+            <topic>${topic}</topic>
+            <debug>${debug}</debug>
+        </Loghub>
+        <Loghub name="loghub-appender-with-pattern-layout">
+            <endpoint>${endpoint}</endpoint>
+            <project>${project}</project>
+            <logstore>${logstore}</logstore>
+            <accessId>${access_id}</accessId>
+            <accessKey>${access_key}</accessKey>
+            <topic>${topic}</topic>
+            <PatternLayout>
+                <pattern>[%d] %m</pattern>
+            </PatternLayout>
+            <debug>${debug}</debug>
+        </Loghub>
+        <Loghub name="loghub-appender-with-track-layout">
+            <endpoint>${endpoint}</endpoint>
+            <project>${project}</project>
+            <logstore>${logstore}</logstore>
+            <accessId>${access_id}</accessId>
+            <accessKey>${access_key}</accessKey>
+            <topic>${topic}</topic>
+            <TrackLayout></TrackLayout>
+            <debug>${debug}</debug>
+        </Loghub>
+        <Loghub name="loghub-appender-with-track-event">
+            <endpoint>${endpoint}</endpoint>
+            <project>${project}</project>
+            <logstore>${logstore}</logstore>
+            <accessId>${access_id}</accessId>
+            <accessKey>${access_key}</accessKey>
+            <topic>${topic}</topic>
+            <TrackLayout>
+                <columns>
+                    <include value="d1" dest="dd1"/>
+                    <exclude value="k2"/>
+                </columns>
+            </TrackLayout>
+            <debug>${debug}</debug>
+        </Loghub>
+        <Null name = "null" />
+    </Appenders>
+    <Loggers>
+        <Logger name="loghub-appender-without-layout" additivity="false">
+            <AppenderRef ref="loghub-appender-without-layout"/>
+        </Logger>
+        <Logger name="loghub-appender-with-pattern-layout" additivity="false">
+            <AppenderRef ref="loghub-appender-with-pattern-layout"/>
+        </Logger>
+        <Logger name="loghub-appender-with-track-layout" additivity="false">
+            <AppenderRef ref="loghub-appender-with-track-layout"/>
+        </Logger>
+        <Logger name="loghub-appender-with-track-event" additivity="false">
+            <AppenderRef ref="loghub-appender-with-track-event"/>
+        </Logger>
+        <Root level="info">
+            <AppenderRef ref="null"/>
+        </Root>
+    </Loggers>
+</Configuration>

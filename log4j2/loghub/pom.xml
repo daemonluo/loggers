@@ -11,6 +11,7 @@
 
     <groupId>com.daemon.loggers.log4j2</groupId>
     <artifactId>loghub</artifactId>
+    <version>1.0-SANPSHOT</version>
 
     <build>
         <plugins>
@@ -48,38 +49,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.aliyun.openservices</groupId>
-            <artifactId>aliyun-log</artifactId>
-            <version>0.6.31</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.aliyun.openservices</groupId>
-            <artifactId>log-loghub-producer</artifactId>
-            <version>0.1.16</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.aliyun.openservices</groupId>
-                    <artifactId>aliyun-log</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.alibaba</groupId>
-                    <artifactId>fastjson</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>com.daemon.loggers</groupId>
+            <artifactId>loghub</artifactId>
         </dependency>
     </dependencies>
 

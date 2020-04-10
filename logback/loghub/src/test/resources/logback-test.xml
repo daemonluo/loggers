@@ -3,8 +3,9 @@
 
     <!--为了防止进程退出时，内存中的数据丢失，请加上此选项-->
     <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
+
     <!-- 可用来获取StatusManager中的状态 -->
-<!--    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener"/>-->
+    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener"/>
 
     <appender name="common-loghub-without-layout" class="com.daemon.loggers.logback.loghub.LoghubAppender">
         <auth class="com.daemon.loggers.logback.loghub.element.Auth">
@@ -18,18 +19,16 @@
         </auth>
         <destination class="com.daemon.loggers.logback.loghub.element.Destination">
             <topic>${topic}</topic>
-            <module>${module}</module>
-            <source>${source}</source>
-            <host>${host}</host>
         </destination>
         <policy class="com.daemon.loggers.logback.loghub.element.Policy">
-            <timeout>${timeout}</timeout>
-            <count>100</count>
-            <bytes>1000</bytes>
-            <memory>10000</memory>
-            <retries>3</retries>
-            <threads>8</threads>
+            <timeout>${timeout:-0}</timeout>
+            <count>${count:-0}</count>
+            <bytes>${bytes:-0}</bytes>
+            <memory>${memory:-0}</memory>
+            <retries>${retries:-0}</retries>
+            <threads>${threads:-0}</threads>
         </policy>
+        <debug>${debug}</debug>
     </appender>
 
     <appender name="common-loghub-with-pattern-layout" class="com.daemon.loggers.logback.loghub.LoghubAppender">
@@ -44,23 +43,21 @@
         </auth>
         <destination class="com.daemon.loggers.logback.loghub.element.Destination">
             <topic>${topic}</topic>
-            <module>${module}</module>
-            <source>${source}</source>
-            <host>${host}</host>
         </destination>
         <policy class="com.daemon.loggers.logback.loghub.element.Policy">
-            <timeout>${timeout}</timeout>
-            <count>100</count>
-            <bytes>1000</bytes>
-            <memory>10000</memory>
-            <retries>3</retries>
-            <threads>8</threads>
+            <timeout>${timeout:-0}</timeout>
+            <count>${count:-0}</count>
+            <bytes>${bytes:-0}</bytes>
+            <memory>${memory:-0}</memory>
+            <retries>${retries:-0}</retries>
+            <threads>${threads:-0}</threads>
         </policy>
         <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
             <layout class="ch.qos.logback.classic.PatternLayout">
                 <pattern>%date %-5level %logger{0} - %message%n</pattern>
             </layout>
         </encoder>
+        <debug>${debug}</debug>
     </appender>
 
     <appender name="common-loghub-with-track-layout" class="com.daemon.loggers.logback.loghub.LoghubAppender">
@@ -75,24 +72,21 @@
         </auth>
         <destination class="com.daemon.loggers.logback.loghub.element.Destination">
             <topic>${topic}</topic>
-            <module>${module}</module>
-            <source>${source}</source>
-            <host>${host}</host>
         </destination>
         <policy class="com.daemon.loggers.logback.loghub.element.Policy">
-            <timeout>${timeout}</timeout>
-            <count>100</count>
-            <bytes>1000</bytes>
-            <memory>10000</memory>
-            <retries>3</retries>
-            <threads>8</threads>
+            <timeout>${timeout:-0}</timeout>
+            <count>${count:-0}</count>
+            <bytes>${bytes:-0}</bytes>
+            <memory>${memory:-0}</memory>
+            <retries>${retries:-0}</retries>
+            <threads>${threads:-0}</threads>
         </policy>
         <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
             <layout class="com.daemon.loggers.logback.loghub.element.TrackLayout">
                 <pattern>%date %-5level %logger{0} - %message%n</pattern>
             </layout>
         </encoder>
-        <debug>true</debug>
+        <debug>${debug}</debug>
     </appender>
 
     <appender name="common-loghub-with-track-event" class="com.daemon.loggers.logback.loghub.LoghubAppender">
@@ -102,22 +96,17 @@
             <logstore>${logstore}</logstore>
             <accessId>${access_id}</accessId>
             <accessKey>${access_key}</accessKey>
-            <token>${token}</token>
-            <userAgent>${user_agent}</userAgent>
         </auth>
         <destination class="com.daemon.loggers.logback.loghub.element.Destination">
             <topic>${topic}</topic>
-            <module>${module}</module>
-            <source>${source}</source>
-            <host>${host}</host>
         </destination>
         <policy class="com.daemon.loggers.logback.loghub.element.Policy">
-            <timeout>${timeout}</timeout>
-            <count>100</count>
-            <bytes>1000</bytes>
-            <memory>10000</memory>
-            <retries>3</retries>
-            <threads>8</threads>
+            <timeout>${timeout:-0}</timeout>
+            <count>${count:-0}</count>
+            <bytes>${bytes:-0}</bytes>
+            <memory>${memory:-0}</memory>
+            <retries>${retries:-0}</retries>
+            <threads>${threads:-0}</threads>
         </policy>
         <predefined class="com.daemon.loggers.logback.loghub.element.Predefined">
             <pair class="com.daemon.loggers.logback.loghub.element.Pair">
@@ -130,7 +119,7 @@
                 <pattern>%date %-5level %logger{0} - %message%n</pattern>
             </layout>
         </encoder>
-        <debug>true</debug>
+        <debug>${debug}</debug>
     </appender>
     <appender name="null" class="ch.qos.logback.core.helpers.NOPAppender"/>
 

@@ -1,4 +1,4 @@
-package com.daemon.loggers.logback;
+package com.daemon.loggers.log4j2;
 
 import com.daemon.loggers.Event;
 import com.daemon.loggers.TrackEvent;

@@ -11,6 +11,7 @@
 
     <groupId>com.daemon.loggers.logback</groupId>
     <artifactId>loghub</artifactId>
+    <version>1.0-SANPSHOT</version>
 
     <dependencies>
         <dependency>

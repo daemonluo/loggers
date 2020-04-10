@@ -315,6 +315,9 @@ public class LoghubAppender extends AppenderBase<ILoggingEvent> {
 
     @Override
     public void stop() {
+        if (debug) {
+            System.out.println("close loghub producer");
+        }
         try {
             if (!isStarted()) {
                 return;
