@@ -209,7 +209,7 @@ final public class LoghubAppender extends AbstractAppender {
             Map<String, String> contextData = event.getContextData().toMap();
             for (Map.Entry<String, String> entry : predefined.entrySet()) {
                 if (entry.getKey().equalsIgnoreCase("topic")) {
-                    topic = entry.getValue();
+                    topic = contextData.get(entry.getValue());
                     continue;
                 }
                 if (entry.getKey().equalsIgnoreCase("source")) {
